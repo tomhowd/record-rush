@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Record Rush - Turn It Up Records</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="game-container">
+        <!-- Start Screen -->
+        <div id="start-screen" class="screen">
+            <div class="logo-container">
+                <img src="https://turnituprecords.co.uk/cdn/shop/files/logo1-removebg-preview_1.png" alt="Turn It Up Records" class="logo-image">
+            </div>
+            <div class="game-title">
+                <h2>🎮 RECORD RUSH</h2>
+                <p class="subtitle">The Ultimate Vinyl-Collecting Challenge!</p>
+            </div>
+            <div class="instructions">
+                <div class="instructions-section">
+                    <h3>🎯 Your Mission</h3>
+                    <p>Find the <span class="purple-text">purple record</span> on the left side of the screen and drag it to the turntable on the right!</p>
+                </div>
+                
+                <div class="instructions-section">
+                    <h3>🕹️ How It Works</h3>
+                    <ul>
+                        <li>🎯 Purple record always spawns on the left side</li>
+                        <li>🖱️ Drag it to the turntable in 10 seconds</li>
+                        <li>⚠️ Don't hit any obstacles or game over!</li>
+                        <li>⏱️ Complete 50 levels to win</li>
+                    </ul>
+                </div>
+                
+                <div class="instructions-section">
+                    <h3>🏆 Tips for Victory</h3>
+                    <ul>
+                        <li>🔍 Look for the glowing purple vinyl</li>
+                        <li>🚀 Move carefully around obstacles</li>
+                        <li>💎 Records get smaller each level</li>
+                        <li>🎁 Bonus levels every 10 stages!</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="button-container">
+                <button id="start-button" class="game-button">🎵 START RECORD RUSH</button>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen" class="screen hidden">
+            <div id="game-hud">
+                <div class="hud-item">
+                    <span class="hud-label">Level:</span>
+                    <span id="level-display">1</span>
+                </div>
+                <div class="hud-item">
+                    <span class="hud-label">Score:</span>
+                    <span id="score-display">0</span>
+                </div>
+                <div class="hud-item">
+                    <span class="hud-label">Time:</span>
+                    <span id="time-display">30</span>
+                </div>
+                <div class="hud-item">
+                    <button id="pause-button" class="small-button">⏸️</button>
+                </div>
+            </div>
+            
+            <div id="game-area">
+                <div id="turntable" class="turntable">
+                    <div class="turntable-base">
+                        <div class="turntable-platter"></div>
+                        <div class="turntable-arm"></div>
+                    </div>
+                    <div class="drop-zone-text">Drop Record Here</div>
+                </div>
+                <div id="game-objects"></div>
+                <div id="particles"></div>
+            </div>
+            
+            <div id="level-complete" class="overlay hidden">
+                <div class="overlay-content">
+                    <h2>🎉 Level Complete!</h2>
+                    <p id="level-score">Score: <span></span></p>
+                    <p id="level-time">Time Bonus: <span></span></p>
+                    <button id="next-level-button" class="game-button">Next Level</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="game-over-screen" class="screen hidden">
+            <h2>🎮 Game Over</h2>
+            <p id="final-score">Final Score: <span></span></p>
+            <p id="levels-completed">Levels Completed: <span></span></p>
+            <button id="restart-button" class="game-button">🔄 Play Again</button>
+            <button id="menu-button" class="game-button">🏠 Main Menu</button>
+        </div>
+
+        <!-- Pause Screen -->
+        <div id="pause-screen" class="screen hidden">
+            <h2>⏸️ Game Paused</h2>
+            <button id="resume-button" class="game-button">▶️ Resume</button>
+            <button id="pause-menu-button" class="game-button">🏠 Main Menu</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
