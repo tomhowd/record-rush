@@ -215,33 +215,41 @@ class RecordRushGame {
     }
     
     showScreen(screenName) {
-        // Force hide all screens first
+        // Force hide all screens immediately with multiple methods
         document.querySelectorAll('.screen').forEach(screen => {
             screen.classList.add('hidden');
             screen.style.display = 'none';
+            screen.style.visibility = 'hidden';
+            screen.style.opacity = '0';
+            screen.style.zIndex = '-1000';
+            screen.style.pointerEvents = 'none';
         });
         
-        // Small delay to ensure hiding takes effect
-        setTimeout(() => {
-            switch(screenName) {
-                case 'start':
-                    this.elements.startScreen.classList.remove('hidden');
-                    this.elements.startScreen.style.display = 'flex';
-                    break;
-                case 'game':
-                    this.elements.gameScreen.classList.remove('hidden');
-                    this.elements.gameScreen.style.display = 'flex';
-                    break;
-                case 'gameover':
-                    this.elements.gameOverScreen.classList.remove('hidden');
-                    this.elements.gameOverScreen.style.display = 'flex';
-                    break;
-                case 'pause':
-                    this.elements.pauseScreen.classList.remove('hidden');
-                    this.elements.pauseScreen.style.display = 'flex';
-                    break;
-            }
-        }, 10);
+        // Force show the target screen immediately
+        let targetScreen = null;
+        switch(screenName) {
+            case 'start':
+                targetScreen = this.elements.startScreen;
+                break;
+            case 'game':
+                targetScreen = this.elements.gameScreen;
+                break;
+            case 'gameover':
+                targetScreen = this.elements.gameOverScreen;
+                break;
+            case 'pause':
+                targetScreen = this.elements.pauseScreen;
+                break;
+        }
+        
+        if (targetScreen) {
+            targetScreen.classList.remove('hidden');
+            targetScreen.style.display = 'flex';
+            targetScreen.style.visibility = 'visible';
+            targetScreen.style.opacity = '1';
+            targetScreen.style.zIndex = screenName === 'game' ? '10' : '5';
+            targetScreen.style.pointerEvents = 'auto';
+        }
     }
     
     startGame() {
@@ -296,21 +304,29 @@ class RecordRushGame {
             this.addScreenDistraction(config.distractionLevel);
         }
         
-        for (let i = 0; i < config.crateCount; i++) {
-            this.createCrate(areaWidth, areaHeight, i < config.movingCrates);
+        // Create the purple record FIRST for best positioning chances
+        this.createRecord(areaWidth, areaHeight, true);
+        
+        // Create static crates first (less problematic)
+        const staticCrates = config.crateCount - config.movingCrates;
+        for (let i = 0; i < staticCrates; i++) {
+            this.createCrate(areaWidth, areaHeight, false);
         }
         
-        // Add rotating obstacles for extreme difficulty
-        for (let i = 0; i < config.rotatingObstacles; i++) {
-            this.createRotatingObstacle(areaWidth, areaHeight);
-        }
-        
+        // Create decoy records (they can adapt around existing objects)
         for (let i = 0; i < config.decoyRecords; i++) {
             this.createRecord(areaWidth, areaHeight, false);
         }
         
-        // Create the purple record last, with smart positioning
-        this.createRecord(areaWidth, areaHeight, true);
+        // Add moving crates later (they move anyway)
+        for (let i = 0; i < config.movingCrates; i++) {
+            this.createCrate(areaWidth, areaHeight, true);
+        }
+        
+        // Add rotating obstacles last (they're most dangerous)
+        for (let i = 0; i < config.rotatingObstacles; i++) {
+            this.createRotatingObstacle(areaWidth, areaHeight);
+        }
     }
     
 
@@ -398,17 +414,40 @@ class RecordRushGame {
         
         let x, y;
         let attempts = 0;
+        const isMobile = window.innerWidth <= 768;
+        
         do {
             if (isPurple) {
-                // Purple vinyl always spawns on the left side of the screen
-                x = Math.random() * (maxWidth * 0.3); // Left 30% of screen
+                // Purple vinyl spawns on left side, but more area on mobile for safety
+                const purpleSpawnArea = isMobile ? 0.5 : 0.3; // 50% on mobile, 30% on desktop
+                x = Math.random() * (maxWidth * purpleSpawnArea);
+                
+                // Extra padding from top/bottom on mobile
+                const topPadding = isMobile ? 150 : 100;
+                const bottomPadding = isMobile ? 150 : 100;
+                y = topPadding + Math.random() * (maxHeight - recordSize - topPadding - bottomPadding);
             } else {
-                // Decoy records can spawn anywhere except the turntable area
-                x = Math.random() * (maxWidth - recordSize);
+                // Decoy records can spawn anywhere except the turntable area and purple spawn area
+                const turntableBuffer = 300;
+                const purpleBuffer = isMobile ? maxWidth * 0.5 : maxWidth * 0.3;
+                
+                if (Math.random() < 0.7) {
+                    // Spawn in safe areas away from turntable and purple zone
+                    x = purpleBuffer + Math.random() * (maxWidth - turntableBuffer - purpleBuffer - recordSize);
+                } else {
+                    // Sometimes spawn in middle area
+                    x = Math.random() * (maxWidth - recordSize);
+                }
+                y = Math.random() * (maxHeight - recordSize) + 100;
             }
-            y = Math.random() * (maxHeight - recordSize) + 100;
             attempts++;
-        } while (attempts < 50 && this.isPositionBlocked(x, y, recordSize, isPurple));
+        } while (attempts < 100 && this.isPositionBlocked(x, y, recordSize, isPurple)); // More attempts
+        
+        // If still blocked after many attempts, force safe position for purple
+        if (isPurple && attempts >= 100) {
+            x = 50; // Safe left position
+            y = 200; // Safe top position
+        }
         
         record.style.left = x + 'px';
         record.style.top = y + 'px';
@@ -469,7 +508,9 @@ class RecordRushGame {
     }
     
     isPositionBlocked(x, y, size = 60, isPurple = false) {
-        const safeDistance = isPurple ? 120 : 70; // Purple records need more space
+        // Much larger safe distance for mobile and purple vinyl
+        const isMobile = window.innerWidth <= 768;
+        const safeDistance = isPurple ? (isMobile ? 180 : 140) : (isMobile ? 100 : 70);
         
         for (const obj of this.gameObjects) {
             const objRect = obj.getBoundingClientRect();
@@ -479,7 +520,8 @@ class RecordRushGame {
             
             // Extra safety for purple records around moving objects
             if (isPurple && obj.classList.contains('moving-crate')) {
-                if (Math.abs(x - objX) < 150 && Math.abs(y - objY) < 150) {
+                const extraSafeDistance = isMobile ? 200 : 150;
+                if (Math.abs(x - objX) < extraSafeDistance && Math.abs(y - objY) < extraSafeDistance) {
                     return true;
                 }
             } else if (Math.abs(x - objX) < safeDistance && Math.abs(y - objY) < safeDistance) {
@@ -491,11 +533,14 @@ class RecordRushGame {
     
     checkCollisionDuringDrag(record, x, y) {
         const recordSize = parseInt(record.style.width) || 60;
+        const isMobile = window.innerWidth <= 768;
+        const tolerance = isMobile ? 10 : 5; // More forgiving on mobile
+        
         const recordRect = {
-            left: x,
-            top: y,
-            right: x + recordSize,
-            bottom: y + recordSize
+            left: x + tolerance,
+            top: y + tolerance,
+            right: x + recordSize - tolerance,
+            bottom: y + recordSize - tolerance
         };
         
         for (const obj of this.gameObjects) {
@@ -509,13 +554,13 @@ class RecordRushGame {
             const objHeight = objRect.height;
             
             const objRectNormalized = {
-                left: objX,
-                top: objY,
-                right: objX + objWidth,
-                bottom: objY + objHeight
+                left: objX + tolerance,
+                top: objY + tolerance,
+                right: objX + objWidth - tolerance,
+                bottom: objY + objHeight - tolerance
             };
             
-            // Check if rectangles overlap
+            // Check if rectangles overlap (with tolerance for mobile)
             if (recordRect.left < objRectNormalized.right &&
                 recordRect.right > objRectNormalized.left &&
                 recordRect.top < objRectNormalized.bottom &&
