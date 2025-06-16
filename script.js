@@ -215,24 +215,33 @@ class RecordRushGame {
     }
     
     showScreen(screenName) {
+        // Force hide all screens first
         document.querySelectorAll('.screen').forEach(screen => {
             screen.classList.add('hidden');
+            screen.style.display = 'none';
         });
         
-        switch(screenName) {
-            case 'start':
-                this.elements.startScreen.classList.remove('hidden');
-                break;
-            case 'game':
-                this.elements.gameScreen.classList.remove('hidden');
-                break;
-            case 'gameover':
-                this.elements.gameOverScreen.classList.remove('hidden');
-                break;
-            case 'pause':
-                this.elements.pauseScreen.classList.remove('hidden');
-                break;
-        }
+        // Small delay to ensure hiding takes effect
+        setTimeout(() => {
+            switch(screenName) {
+                case 'start':
+                    this.elements.startScreen.classList.remove('hidden');
+                    this.elements.startScreen.style.display = 'flex';
+                    break;
+                case 'game':
+                    this.elements.gameScreen.classList.remove('hidden');
+                    this.elements.gameScreen.style.display = 'flex';
+                    break;
+                case 'gameover':
+                    this.elements.gameOverScreen.classList.remove('hidden');
+                    this.elements.gameOverScreen.style.display = 'flex';
+                    break;
+                case 'pause':
+                    this.elements.pauseScreen.classList.remove('hidden');
+                    this.elements.pauseScreen.style.display = 'flex';
+                    break;
+            }
+        }, 10);
     }
     
     startGame() {
